@@ -35,7 +35,8 @@ Task:
    - "id": the number of the single best representative source item for that group \
      (the most detailed/informative one), from the numbered list below.
 
-Return ONLY items you are confident are real, distinct ocean oil leak/spill incidents.
+Return ONLY items you are confident are real, distinct ocean oil leak/spill incidents, \
+as a JSON object with a single "items" array.
 
 Numbered items:
 {items_block}
@@ -46,6 +47,34 @@ class _ClusterItem(BaseModel):
     id: int
     title: str
     description: str
+
+
+class _ClusterResponse(BaseModel):
+    items: list[_ClusterItem]
+
+
+# Written by hand (flat, no $ref/$defs) rather than derived from
+# _ClusterResponse.model_json_schema(), since pydantic emits $ref for nested
+# models and that isn't guaranteed to be supported by the API's schema
+# validator - a flat schema is safe everywhere.
+_RESPONSE_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                },
+                "required": ["id", "title", "description"],
+            },
+        }
+    },
+    "required": ["items"],
+}
 
 
 def _build_items_block(items: list[ScrapedItem]) -> str:
@@ -70,12 +99,13 @@ def cluster_and_summarize(items: list[ScrapedItem]) -> list[TopNewsItem]:
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
-            response_schema=list[_ClusterItem],
+            response_json_schema=_RESPONSE_JSON_SCHEMA,
             temperature=0.2,
         ),
     )
 
-    clusters: list[_ClusterItem] = response.parsed or []
+    parsed = _ClusterResponse.model_validate_json(response.text)
+    clusters = parsed.items
 
     results: list[TopNewsItem] = []
     for cluster in clusters[:5]:

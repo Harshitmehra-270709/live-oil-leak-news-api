@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -25,7 +25,3 @@ class TopNewsResponse(BaseModel):
     cached: bool
     count: int
     items: list[TopNewsItem]
-
-
-def utcnow() -> datetime:
-    return datetime.now(timezone.utc)

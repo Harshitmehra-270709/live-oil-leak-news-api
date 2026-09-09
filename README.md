@@ -71,6 +71,8 @@ Then open http://127.0.0.1:8000/api/oil-leaks/top
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Cheap Gemini model used for clustering/summarizing |
 | `CACHE_TTL_SECONDS` | `3600` | How long results are cached before re-scraping/re-summarizing |
 | `LOOKBACK_HOURS` | `168` | How far back an article can be published and still be considered "live" |
+| `MAX_ITEMS_TO_GEMINI` | `90` | Cap on filtered/deduped items sent to Gemini per refresh, to bound cost |
+| `FETCH_TIMEOUT_SECONDS` | `10` | Per-source RSS fetch timeout |
 
 ## Adjusting sources
 
